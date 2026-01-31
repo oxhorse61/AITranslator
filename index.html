@@ -6,11 +6,6 @@
     <title>PaperPal Translator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- React PDF Annotation Layer Styles -->
-    <link rel="stylesheet" href="https://unpkg.com/react-pdf@10.3.0/dist/Page/AnnotationLayer.css" />
-    <!-- React PDF Text Layer Styles -->
-    <link rel="stylesheet" href="https://unpkg.com/react-pdf@10.3.0/dist/Page/TextLayer.css" />
-
     <style>
       /* --- PDF Page Styles --- */
       
@@ -19,12 +14,6 @@
         box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         margin: 0 auto;
       }
-
-      /* 
-         CRITICAL FIX: Do NOT force width/height on the canvas or text layer via CSS.
-         Let React-PDF calculate the exact dimensions based on the 'width' prop.
-         This ensures the Text Layer aligns perfectly with the Canvas.
-      */
 
       /* Selection Overlay for Box Mode */
       .selection-overlay {
@@ -68,15 +57,18 @@
         background: #94a3b8; 
       }
     </style>
-  <script type="importmap">
+<script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@^19.2.4",
+    "vite": "https://esm.sh/vite@^7.3.1",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
     "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
     "@google/genai": "https://esm.sh/@google/genai@^1.39.0",
-    "react-pdf": "https://esm.sh/react-pdf@^10.3.0",
-    "lucide-react": "https://esm.sh/lucide-react@^0.563.0"
+    "react-pdf/": "https://esm.sh/react-pdf@^10.3.0/",
+    "react-pdf": "https://esm.sh/react-pdf@^10.3.0"
   }
 }
 </script>

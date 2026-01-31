@@ -2,15 +2,33 @@ import { GoogleGenAI, LiveServerMessage, Modality, Type } from "@google/genai";
 import { SearchSource } from "../types";
 import { base64ToUint8Array, decodeAudioData, float32To16BitPCM, arrayBufferToBase64 } from "./audioUtils";
 
-// Safely access API_KEY to prevent "ReferenceError: process is not defined" crashes in browsers
-// While the key MUST come from process.env, accessing 'process' directly in some browser builds throws an error if not polyfilled.
+// Robust API Key retrieval for different environments (Vite, CRA, Node)
 const getApiKey = () => {
-  try {
-    return process.env.API_KEY || '';
-  } catch (e) {
-    console.error("Environment variable access failed. Ensure API_KEY is set in your build/deployment settings.");
-    return '';
+  let key = '';
+
+  // 1. Try Vite (import.meta.env) - Most common for this stack
+  // @ts-ignore
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_KEY) {
+    // @ts-ignore
+    key = import.meta.env.VITE_API_KEY;
   }
+  // 2. Try Create React App (process.env.REACT_APP_*)
+  else if (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_KEY) {
+    key = process.env.REACT_APP_API_KEY;
+  }
+  // 3. Fallback to generic process.env (Node/Custom Define)
+  else if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
+    key = process.env.API_KEY;
+  }
+
+  if (!key) {
+    console.warn("PaperPal: No API Key found. Please set VITE_API_KEY in your environment variables.");
+  } else {
+    // Safety log (only first 4 chars)
+    console.log(`PaperPal: API Key loaded (${key.substring(0, 4)}...)`);
+  }
+
+  return key;
 };
 
 const API_KEY = getApiKey();
@@ -26,6 +44,8 @@ const retryOperation = async <T>(operation: () => Promise<T>, retries = 3, delay
   try {
     return await operation();
   } catch (error: any) {
+    console.error("Gemini API Error:", error);
+
     // Check for quota/rate limit errors (429 or specific text)
     const isQuotaError = error.message?.includes('429') || 
                          error.message?.includes('quota') || 
@@ -43,8 +63,10 @@ const retryOperation = async <T>(operation: () => Promise<T>, retries = 3, delay
 
 // 1. Text Translation Service
 export const translateText = async (text: string): Promise<string> => {
-  if (!API_KEY) throw new Error("API Key missing");
-  const ai = new GoogleGenAI({ apiKey: API_KEY });
+  const key = getApiKey();
+  if (!key) throw new Error("API Key is missing. Please check VITE_API_KEY in settings.");
+  
+  const ai = new GoogleGenAI({ apiKey: key });
 
   return retryOperation(async () => {
     const response = await ai.models.generateContent({
@@ -63,8 +85,9 @@ export const translateText = async (text: string): Promise<string> => {
 
 // 2. OCR & Translation Service (Multimodal)
 export const analyzeImageRegion = async (base64Image: string): Promise<{ originalText: string; translatedText: string }> => {
-  if (!API_KEY) throw new Error("API Key missing");
-  const ai = new GoogleGenAI({ apiKey: API_KEY });
+  const key = getApiKey();
+  if (!key) throw new Error("API Key is missing. Please check VITE_API_KEY in settings.");
+  const ai = new GoogleGenAI({ apiKey: key });
 
   // Remove data URL prefix
   const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
@@ -127,8 +150,9 @@ export const analyzeImageRegion = async (base64Image: string): Promise<{ origina
 
 // 3. Search Grounding Service
 export const explainWithSearch = async (text: string): Promise<{ explanation: string; sources: SearchSource[] }> => {
-  if (!API_KEY) throw new Error("API Key missing");
-  const ai = new GoogleGenAI({ apiKey: API_KEY });
+  const key = getApiKey();
+  if (!key) throw new Error("API Key is missing. Please check VITE_API_KEY in settings.");
+  const ai = new GoogleGenAI({ apiKey: key });
 
   return retryOperation(async () => {
     const response = await ai.models.generateContent({
@@ -159,8 +183,9 @@ export const explainWithSearch = async (text: string): Promise<{ explanation: st
 
 // 4. Text-to-Speech (TTS) Service
 export const generateSpeech = async (text: string): Promise<AudioBuffer> => {
-  if (!API_KEY) throw new Error("API Key missing");
-  const ai = new GoogleGenAI({ apiKey: API_KEY });
+  const key = getApiKey();
+  if (!key) throw new Error("API Key is missing. Please check VITE_API_KEY in settings.");
+  const ai = new GoogleGenAI({ apiKey: key });
 
   return retryOperation(async () => {
     const response = await ai.models.generateContent({
@@ -197,7 +222,12 @@ export class LiveSession {
 
   async connect() {
     this.onStatusChange("Connecting...");
-    const ai = new GoogleGenAI({ apiKey: API_KEY });
+    const key = getApiKey();
+    if (!key) {
+      this.onStatusChange("Error: Missing API Key");
+      return;
+    }
+    const ai = new GoogleGenAI({ apiKey: key });
     
     try {
       this.session = await ai.live.connect({
