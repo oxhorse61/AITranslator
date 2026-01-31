@@ -2,7 +2,18 @@ import { GoogleGenAI, LiveServerMessage, Modality, Type } from "@google/genai";
 import { SearchSource } from "../types";
 import { base64ToUint8Array, decodeAudioData, float32To16BitPCM, arrayBufferToBase64 } from "./audioUtils";
 
-const API_KEY = process.env.API_KEY || '';
+// Safely access API_KEY to prevent "ReferenceError: process is not defined" crashes in browsers
+// While the key MUST come from process.env, accessing 'process' directly in some browser builds throws an error if not polyfilled.
+const getApiKey = () => {
+  try {
+    return process.env.API_KEY || '';
+  } catch (e) {
+    console.error("Environment variable access failed. Ensure API_KEY is set in your build/deployment settings.");
+    return '';
+  }
+};
+
+const API_KEY = getApiKey();
 
 // Helper to strip markdown fences from JSON response
 const cleanJson = (text: string) => {
