@@ -1,0 +1,7 @@
+{
+  "name": "PaperPal Translator",
+  "description": "A professional PDF translation tool for academic papers using Gemini models for translation, search grounding, and voice interaction.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
