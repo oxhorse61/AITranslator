@@ -1,6 +1,4 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+
 
 借助google ai studio实现的文献翻译工具，功能包括选词句翻译，截图翻译，截图ai问答，ai追问，批量页面翻译为word版本等。
 
